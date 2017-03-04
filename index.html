@@ -61,10 +61,17 @@
             align-items: center;
             background: #5C6672;
             cursor: pointer;
+            overflow: hidden;
         }
 
         .menu-item.active {
             background: #4C555F;
+        }
+
+        @media (max-width: 700px) {
+            .hide-mobile {
+                display: none !important;
+            }
         }
     </style>
     <title>Webseiten deutscher Kommunen - Check Germany</title>
@@ -74,18 +81,18 @@
 <div id="map" class="map" style="width: 100vw;height:100vh"></div>
 <nav class="bottom-menu">
     <div class="menu-item active" data-layer="tree-points">
-        Alle Bäume
+        Alle<span class="hide-mobile"> Bäume</span>
     </div>
     <div class="menu-item" data-layer="tree-points" data-filter-typ="Obstbaum">
-        Obstbäume
+        Obst<span class="hide-mobile">bäume</span>
     </div>
     <div class="menu-item" data-layer="trees-new">
-        Neu gepflanze Bäume<br>
-        <small>in Heilbronn</small>
+        <span class="hide-mobile">Neu</span> gepflanzte<span class="hide-mobile"> Bäume<br>
+        <small>in Heilbronn</small></span>
     </div>
     <div class="menu-item" data-layer="trees-missing">
-        Gefällte Bäume<br>
-        <small>in Heilbronn</small>
+        Gefällte <span class="hide-mobile">Bäume<br>
+        <small>in Heilbronn</small></span>
     </div>
 </nav>
 
@@ -258,6 +265,8 @@
                         var buttonLayer = button.dataset.layer;
                         button.addEventListener('click', (function (innerButton, innerButtonLayer) {
                             return function () {
+                                document.querySelector('.menu-item.active').classList.remove('active');
+                                innerButton.classList.add('active');
                                 if (innerButtonLayer == activeLayer) return true;
                                 map.setLayoutProperty(activeLayer, 'visibility', 'none');
                                 map.setLayoutProperty(activeLayer + '-crown', 'visibility', 'none');
@@ -265,8 +274,6 @@
                                 map.setLayoutProperty(innerButtonLayer + '-crown', 'visibility', 'visible');
                                 map.setFilter(innerButtonLayer, null);
                                 map.setFilter(innerButtonLayer + '-crown', null);
-                                document.querySelector('.menu-item.active').classList.remove('active');
-                                innerButton.classList.add('active');
                                 activeLayer = innerButtonLayer;
                             }
                         }(button, buttonLayer)))
