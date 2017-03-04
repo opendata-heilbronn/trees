@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="/"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- build:css css/app.min.css -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet'/>
+    <!-- endbuild -->
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        body {
+            font-size: 16px;
+        }
+
+        .info {
+            padding: 6px 8px;
+            background: white;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            width: 300px;
+            max-width: 70vw;
+            position: absolute;
+            top: 10px;
+            font-size: 0.7rem;
+            right: 10px;
+            z-index: 10;
+            white-space: pre-line;
+        }
+
+        a {
+            cursor: pointer;
+        }
+
+        .bottom-menu {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            border-top: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-item {
+            flex: 1 1 25%;
+            display: flex;
+            flex-direction: column;
+            color: #FFF;
+            border-right: 1px solid #888;
+            font-size: 0.9rem;
+            padding: 2vh 2rem;
+            justify-content: center;
+            align-items: center;
+            background: #5C6672;
+            cursor: pointer;
+        }
+
+        .menu-item.active {
+            background: #4C555F;
+        }
+    </style>
+    <title>Webseiten deutscher Kommunen - Check Germany</title>
+</head>
+<body>
+<div class="info" style="display:none;"></div>
+<div id="map" class="map" style="width: 100vw;height:100vh"></div>
+<nav class="bottom-menu">
+    <div class="menu-item active" data-layer="tree-points">
+        Alle Bäume
+    </div>
+    <div class="menu-item" data-layer="tree-points" data-filter-typ="Obstbaum">
+        Obstbäume
+    </div>
+    <div class="menu-item" data-layer="trees-new">
+        Neu gepflanze Bäume<br>
+        <small>in Heilbronn</small>
+    </div>
+    <div class="menu-item" data-layer="trees-missing">
+        Gefällte Bäume<br>
+        <small>in Heilbronn</small>
+    </div>
+</nav>
+
+<script src='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.js'></script>
+<script>
+    'use strict';
+    (function () {
+        var map = {
+            leafletMap: null,
+            areaLayer: null,
+            areaLayerMap: {},
+            numberFormatter: null,
+            init: function () {
+                mapboxgl.accessToken = 'pk.eyJ1IjoiY29kZWZvcmhlaWxicm9ubiIsImEiOiJaVW1RaEhzIn0.dTT9PWOqjBbzpw7S--GnAA';
+                var map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/codeforheilbronn/cizvd2pd7002b2smwdmxyt26s',
+                    center: [9.197, 49.1236],
+                    zoom: 12,
+                    minZoom: 1,
+                    maxZoom: 18
+                });
+
+                var nav = new mapboxgl.NavigationControl();
+                map.addControl(nav, 'top-left');
+
+                var activeLayer = 'tree-points';
+                var infoElement = document.querySelector('.info');
+
+                map.on('load', function () {
+                    map.addSource("trees-hn-02-2017", {
+                        "type": "vector",
+                        "tiles": ['https://checkgermany.de/tiles/trees-hn-02-2017/{z}/{x}/{y}.pbf'],
+                        "attribution": 'Stadt Heilbronn'
+                    });
+                    map.addSource("trees-hn-missing-2017", {
+                        "type": "vector",
+                        "tiles": ['https://checkgermany.de/tiles/trees-hn-missing-2017/{z}/{x}/{y}.pbf'],
+                        "attribution": 'Stadt Heilbronn'
+                    });
+                    map.addSource("trees-hn-new-2017", {
+                        "type": "vector",
+                        "tiles": ['https://checkgermany.de/tiles/trees-hn-new-2017/{z}/{x}/{y}.pbf'],
+                        "attribution": 'Stadt Heilbronn'
+                    });
+
+                    var layerBase = {
+                        "type": "circle",
+                        'paint': {
+                            'circle-radius': {
+                                property: 'ST_UMFANG',
+                                type: 'interval',
+                                stops: [
+                                    [0, 1],
+                                    [2, 2],
+                                    [3, 3],
+                                    [4, 4],
+                                    [5, 5],
+                                    [6, 6],
+                                    [7, 7],
+                                    [8, 8],
+                                    [9, 9],
+                                    [14, 14],
+                                    [20, 20]
+                                ]
+                            },
+                            'circle-opacity': 0.75,
+                            'circle-color': '#6E4100'
+                        }
+                    };
+                    var layerBaseCrown = {
+                        "type": "circle",
+                        'paint': {
+                            'circle-radius': {
+                                property: 'KRONE_DM',
+                                type: 'interval',
+                                stops: [
+                                    [0, 1],
+                                    [5, 2],
+                                    [10, 5],
+                                    [15, 7],
+                                    [20, 10],
+                                    [25, 12],
+                                    [30, 15],
+                                    [35, 16],
+                                    [40, 20],
+                                    [50, 25]
+                                ]
+                            },
+                            'circle-opacity': 0.75,
+                            'circle-color': '#3FA61F'
+                        }
+                    };
+                    map.addLayer(Object.assign({
+                        "id": "tree-points-crown",
+                        "source": "trees-hn-02-2017",
+                        "source-layer": "baumkataster_022017geojson"
+                    }, layerBaseCrown));
+                    map.addLayer(Object.assign({
+                        "id": "tree-points",
+                        "source": "trees-hn-02-2017",
+                        "source-layer": "baumkataster_022017geojson"
+                    }, layerBase));
+                    map.addLayer(Object.assign({
+                        "id": "trees-missing-crown",
+                        "source": "trees-hn-missing-2017",
+                        "source-layer": "missingTreesgeojson",
+                        "layout": {
+                            "visibility": "none"
+                        }
+                    }, layerBaseCrown));
+                    map.addLayer(Object.assign({
+                        "id": "trees-missing",
+                        "source": "trees-hn-missing-2017",
+                        "source-layer": "missingTreesgeojson",
+                        "layout": {
+                            "visibility": "none"
+                        }
+                    }, layerBase));
+                    map.addLayer(Object.assign({
+                        "id": "trees-new-crown",
+                        "source": "trees-hn-new-2017",
+                        "source-layer": "newTreesgeojson",
+                        "layout": {
+                            "visibility": "none"
+                        }
+                    }, layerBaseCrown));
+                    map.addLayer(Object.assign({
+                        "id": "trees-new",
+                        "source": "trees-hn-new-2017",
+                        "source-layer": "newTreesgeojson",
+                        "layout": {
+                            "visibility": "none"
+                        }
+                    }, layerBase));
+
+                    map.on("mousemove", function (e) {
+                        console.log(activeLayer);
+                        var features = map.queryRenderedFeatures(e.point, {layers: ['tree-points']});
+                        console.log(features);
+                        if (features && features.length > 0) {
+                            var feature = features[0];
+                            var lines = [];
+
+                            lines.push(feature.properties['TYP'] + ', ' + feature.properties['DEU_TEXT']);
+                            lines.push(feature.properties['WIS_TEXT']);
+                            lines.push('Stamm-Umfang: ' + feature.properties['ST_UMFANG'] + 'm, Durchmesser Krone: ' + feature.properties['KRONE_DM'] + 'm');
+                            lines.push('Baum-Nummer: ' + feature.properties.BAUM_NR);
+
+                            infoElement.innerText = lines.join("\n");
+                            infoElement.style.display = 'block';
+                        } else {
+                            infoElement.style.display = 'none';
+                        }
+                    });
+
+                    var layerSwitchButtons = document.querySelectorAll('.menu-item[data-layer]');
+                    for (var i = 0; i < layerSwitchButtons.length; i++) {
+                        var button = layerSwitchButtons[i];
+                        var buttonLayer = button.dataset.layer;
+                        button.addEventListener('click', (function (innerButton, innerButtonLayer) {
+                            return function () {
+                                if(innerButtonLayer == activeLayer) return true;
+                                map.setLayoutProperty(activeLayer, 'visibility', 'none');
+                                map.setLayoutProperty(activeLayer + '-crown', 'visibility', 'none');
+                                map.setLayoutProperty(innerButtonLayer, 'visibility', 'visible');
+                                map.setLayoutProperty(innerButtonLayer + '-crown', 'visibility', 'visible');
+                                map.setFilter(innerButtonLayer, null);
+                                map.setFilter(innerButtonLayer + '-crown', null);
+                                document.querySelector('.menu-item.active').classList.remove('active');
+                                innerButton.classList.add('active');
+                                activeLayer = innerButtonLayer;
+                            }
+                        }(button, buttonLayer)))
+                    }
+
+                    var filterElement = document.querySelector('[data-filter-typ]');
+                    filterElement.addEventListener('click', function() {
+                        map.setFilter('tree-points-crown', ['==', 'TYP', 'Obstbaum']);
+                        map.setFilter('tree-points', ['==', 'TYP', 'Obstbaum']);
+                        document.querySelector('.menu-item.active').classList.remove('active');
+                        filterElement.classList.add('active');
+                    })
+                });
+
+                map.on("mouseout", function () {
+                    infoElement.style.display = 'none';
+                });
+            }
+        };
+
+        map.init();
+    })();
+</script>
+</body>
+</html>
