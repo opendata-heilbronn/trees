@@ -139,8 +139,8 @@
                                 property: 'ST_UMFANG',
                                 type: 'interval',
                                 stops: [
-                                    [0, 1],
-                                    [2, 2],
+                                    [0, 2],
+                                    [2, 3],
                                     [3, 3],
                                     [4, 4],
                                     [5, 5],
@@ -163,8 +163,8 @@
                                 property: 'KRONE_DM',
                                 type: 'interval',
                                 stops: [
-                                    [0, 1],
-                                    [5, 2],
+                                    [0, 3],
+                                    [5, 4],
                                     [10, 5],
                                     [15, 7],
                                     [20, 10],
@@ -212,7 +212,13 @@
                         "layout": {
                             "visibility": "none"
                         }
-                    }, layerBaseCrown));
+                    }, layerBaseCrown, {
+                        'paint': {
+                            'circle-radius': 8,
+                            'circle-opacity': 0.75,
+                            'circle-color': '#3FA61F'
+                        }
+                    }));
                     map.addLayer(Object.assign({
                         "id": "trees-new",
                         "source": "trees-hn-new-2017",
@@ -220,7 +226,13 @@
                         "layout": {
                             "visibility": "none"
                         }
-                    }, layerBase));
+                    }, layerBase, {
+                        'paint': {
+                            'circle-radius': 4,
+                            'circle-opacity': 0.75,
+                            'circle-color': '#6E4100'
+                        }
+                    }));
 
                     map.on("mousemove", function (e) {
                         console.log(activeLayer);
@@ -248,7 +260,7 @@
                         var buttonLayer = button.dataset.layer;
                         button.addEventListener('click', (function (innerButton, innerButtonLayer) {
                             return function () {
-                                if(innerButtonLayer == activeLayer) return true;
+                                if (innerButtonLayer == activeLayer) return true;
                                 map.setLayoutProperty(activeLayer, 'visibility', 'none');
                                 map.setLayoutProperty(activeLayer + '-crown', 'visibility', 'none');
                                 map.setLayoutProperty(innerButtonLayer, 'visibility', 'visible');
@@ -263,7 +275,7 @@
                     }
 
                     var filterElement = document.querySelector('[data-filter-typ]');
-                    filterElement.addEventListener('click', function() {
+                    filterElement.addEventListener('click', function () {
                         map.setFilter('tree-points-crown', ['==', 'TYP', 'Obstbaum']);
                         map.setFilter('tree-points', ['==', 'TYP', 'Obstbaum']);
                         document.querySelector('.menu-item.active').classList.remove('active');
