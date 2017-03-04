@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!DOCtype html>
 <html>
 <head>
     <base href="/"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- build:css css/app.min.css -->
@@ -59,6 +59,7 @@
             padding: 2vh 2rem;
             justify-content: center;
             align-items: center;
+            text-align: center;
             background: #5C6672;
             cursor: pointer;
             overflow: hidden;
@@ -68,16 +69,27 @@
             background: #4C555F;
         }
 
-        @media (max-width: 700px) {
+        * {
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 1000px) {
             .hide-mobile {
                 display: none !important;
             }
         }
     </style>
-    <title>Webseiten deutscher Kommunen - Check Germany</title>
+    <title>Baumdaten in Deutschland</title>
 </head>
 <body>
-<div style="display: none; position:absolute;top:0;left:0;width:100%;padding:1rem;background:#DB4225;color:#FFF;z-index:999;" class="alert-warn"><div style="margin: 0 auto;max-width:800px;text-align:center;font-size:16px;">Gefällte / Gepflanzte Bäume: Die Korrektheit der Daten ist noch nicht geklärt.</div></div>
+<div style="position:absolute;top:0;left:0;width:100%;padding:1rem;background:#DB4225;opacity:0.8;color:#FFF;z-index:1;"
+     class="alert-warn">
+    <div style="position: absolute; right: 20px; top: 10px;font-size:18px;">X</div>
+
+    <div style="margin: 0 auto;max-width:800px;text-align:center;font-size:16px;">Bäume ohne Stammumfang werden derzeit
+        zu groß angezeigt<br/>Gefällte / Gepflanzte Bäume: Die Korrektheit der Daten ist noch nicht geklärt.
+    </div>
+</div>
 <div class="info" style="display:none;"></div>
 <div id="map" class="map" style="width: 100vw;height:100vh"></div>
 <nav class="bottom-menu">
@@ -85,15 +97,19 @@
         Alle<span class="hide-mobile"> Bäume</span>
     </div>
     <div class="menu-item" data-layer="tree-points" data-filter-typ="Obstbaum">
-        Obst<span class="hide-mobile">bäume</span>
+        Kastanien<span class="hide-mobile">bäume</span>
     </div>
     <div class="menu-item" data-layer="trees-new" data-warn="true">
-        <span class="hide-mobile">Neu</span> gepflanzte<span class="hide-mobile"> Bäume<br>
-        <small>in Heilbronn</small></span>
+        <div>
+            <span class="hide-mobile">Neu</span> gepflanzte<span class="hide-mobile"> Bäume<br>
+        <small>in Heilbronn, 12/2014-02/2017</small></span>
+        </div>
     </div>
     <div class="menu-item" data-layer="trees-missing" data-warn="true">
-        Gefällte <span class="hide-mobile">Bäume<br>
-        <small>in Heilbronn</small></span>
+        <div>
+            Gefällte <span class="hide-mobile">Bäume<br>
+        <small>in Heilbronn, 12/2014-02/2017</small></span>
+        </div>
     </div>
 </nav>
 
@@ -113,7 +129,7 @@
                     style: 'mapbox://styles/codeforheilbronn/cizvd2pd7002b2smwdmxyt26s',
                     center: [9.197, 49.1236],
                     zoom: 12,
-                    minZoom: 1,
+                    minZoom: 5,
                     maxZoom: 18
                 });
 
@@ -126,7 +142,7 @@
                 map.on('load', function () {
                     map.addSource("trees-hn-02-2017", {
                         "type": "vector",
-                        "tiles": ['https://checkgermany.de/tiles/trees-hn-02-2017/{z}/{x}/{y}.pbf'],
+                        "tiles": ['https://checkgermany.de/tiles/trees-de/{z}/{x}/{y}.pbf'],
                         "attribution": '© Stadt Heilbronn, 02/2017'
                     });
                     map.addSource("trees-hn-missing-2017", {
@@ -144,7 +160,7 @@
                         "type": "circle",
                         'paint': {
                             'circle-radius': {
-                                property: 'ST_UMFANG',
+                                property: 'stUmfang',
                                 type: 'interval',
                                 stops: [
                                     [0, 2],
@@ -168,7 +184,7 @@
                         "type": "circle",
                         'paint': {
                             'circle-radius': {
-                                property: 'KRONE_DM',
+                                property: 'kroneDm',
                                 type: 'interval',
                                 stops: [
                                     [0, 3],
@@ -190,12 +206,12 @@
                     map.addLayer(Object.assign({
                         "id": "tree-points-crown",
                         "source": "trees-hn-02-2017",
-                        "source-layer": "baumkataster_022017geojson"
+                        "source-layer": "allTreesgeojson"
                     }, layerBaseCrown));
                     map.addLayer(Object.assign({
                         "id": "tree-points",
                         "source": "trees-hn-02-2017",
-                        "source-layer": "baumkataster_022017geojson"
+                        "source-layer": "allTreesgeojson"
                     }, layerBase));
                     map.addLayer(Object.assign({
                         "id": "trees-missing-crown",
@@ -248,10 +264,11 @@
                             var feature = features[0];
                             var lines = [];
 
-                            lines.push(feature.properties['TYP'] + ', ' + feature.properties['DEU_TEXT']);
-                            lines.push(feature.properties['WIS_TEXT']);
-                            lines.push('Stamm-Umfang: ' + feature.properties['ST_UMFANG'] + 'm, Durchmesser Krone: ' + feature.properties['KRONE_DM'] + 'm');
-                            lines.push('Baum-Nummer: ' + feature.properties.BAUM_NR);
+                            lines.push(feature.properties['treeType'] + ', ' + feature.properties['deuText']);
+                            lines.push(feature.properties['wisText']);
+                            lines.push('Stamm-Umfang: ' + feature.properties['stUmfang'] + 'm, Durchmesser Krone: ' + feature.properties['kroneDm'] + 'm');
+                            lines.push('Baum-Nummer: ' + feature.properties.baumNr);
+                            lines.push('© ' + feature.properties.attribution);
 
                             infoElement.innerText = lines.join("\n");
                             infoElement.style.display = 'block';
@@ -269,7 +286,6 @@
                                 document.querySelector('.menu-item.active').classList.remove('active');
                                 innerButton.classList.add('active');
                                 if (innerButtonLayer == activeLayer) return true;
-                                document.querySelector('.alert-warn').style.display = innerButton.dataset.warn ? 'block' : 'none';
                                 map.setLayoutProperty(activeLayer, 'visibility', 'none');
                                 map.setLayoutProperty(activeLayer + '-crown', 'visibility', 'none');
                                 map.setLayoutProperty(innerButtonLayer, 'visibility', 'visible');
@@ -283,8 +299,8 @@
 
                     var filterElement = document.querySelector('[data-filter-typ]');
                     filterElement.addEventListener('click', function () {
-                        map.setFilter('tree-points-crown', ['==', 'TYP', 'Obstbaum']);
-                        map.setFilter('tree-points', ['==', 'TYP', 'Obstbaum']);
+                        map.setFilter('tree-points-crown', ['==', 'treeType', 'CASTANEA']);
+                        map.setFilter('tree-points', ['==', 'treeType', 'CASTANEA']);
                         document.querySelector('.menu-item.active').classList.remove('active');
                         filterElement.classList.add('active');
                     })
@@ -295,6 +311,10 @@
                 });
 
                 map.addControl(new mapboxgl.GeolocateControl(), 'top-left');
+
+                document.querySelector('.alert-warn').addEventListener('click', function () {
+                    document.querySelector('.alert-warn').style.display = 'none';
+                })
             }
         };
 
