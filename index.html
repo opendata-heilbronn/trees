@@ -87,7 +87,7 @@
     <div style="position: absolute; right: 20px; top: 10px;font-size:18px;">X</div>
 
     <div style="margin: 0 auto;max-width:800px;text-align:center;font-size:16px;">Bäume ohne Stammumfang werden derzeit
-        zu groß angezeigt<br/>Gefällte / Gepflanzte Bäume: Die Korrektheit der Daten ist noch nicht geklärt.
+        nicht angezeigt<br/>Gefällte / Gepflanzte Bäume: Die Korrektheit der Daten ist noch nicht geklärt.<br />Hamburg: Stammumfang falsch
     </div>
 </div>
 <div class="info" style="display:none;"></div>
@@ -206,12 +206,14 @@
                     map.addLayer(Object.assign({
                         "id": "tree-points-crown",
                         "source": "trees-hn-02-2017",
-                        "source-layer": "allTreesgeojson"
+                        "source-layer": "allTreesgeojson",
+                        "filter": ["has", "stUmfang"]
                     }, layerBaseCrown));
                     map.addLayer(Object.assign({
                         "id": "tree-points",
                         "source": "trees-hn-02-2017",
-                        "source-layer": "allTreesgeojson"
+                        "source-layer": "allTreesgeojson",
+                        "filter": ["has", "stUmfang"]
                     }, layerBase));
                     map.addLayer(Object.assign({
                         "id": "trees-missing-crown",
@@ -285,13 +287,15 @@
                             return function () {
                                 document.querySelector('.menu-item.active').classList.remove('active');
                                 innerButton.classList.add('active');
+                                if (innerButtonLayer == 'tree-points') {
+                                    map.setFilter(innerButtonLayer, ["has", "stUmfang"]);
+                                    map.setFilter(innerButtonLayer + '-crown', ["has", "stUmfang"]);
+                                }
                                 if (innerButtonLayer == activeLayer) return true;
                                 map.setLayoutProperty(activeLayer, 'visibility', 'none');
                                 map.setLayoutProperty(activeLayer + '-crown', 'visibility', 'none');
                                 map.setLayoutProperty(innerButtonLayer, 'visibility', 'visible');
                                 map.setLayoutProperty(innerButtonLayer + '-crown', 'visibility', 'visible');
-                                map.setFilter(innerButtonLayer, null);
-                                map.setFilter(innerButtonLayer + '-crown', null);
                                 activeLayer = innerButtonLayer;
                             }
                         }(button, buttonLayer)))
