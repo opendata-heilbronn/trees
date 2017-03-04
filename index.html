@@ -235,9 +235,7 @@
                     }));
 
                     map.on("mousemove", function (e) {
-                        console.log(activeLayer);
                         var features = map.queryRenderedFeatures(e.point, {layers: [activeLayer]});
-                        console.log(features);
                         if (features && features.length > 0) {
                             var feature = features[0];
                             var lines = [];
@@ -286,6 +284,8 @@
                 map.on("mouseout", function () {
                     infoElement.style.display = 'none';
                 });
+
+                map.addControl(new mapboxgl.GeolocateControl(), 'top-left');
             }
         };
 
